@@ -1,0 +1,44 @@
+# Déploiement pour créer et gérer l'application orderapp dans Kubernetes
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: orderapp
+spec:
+  replicas: 1 # Définit le nombre de répliques de l'application à maintenir
+  selector:
+    matchLabels:
+      app: orderapp # Sélectionne les pods basés sur ce label pour le déploiement
+  template: # Définit le modèle de pod à utiliser
+    metadata:
+      labels:
+        app: orderapp
+    spec:
+      containers:
+        - name: orderapp # Nom du conteneur
+          image: elfn/order-srv:latest # Image Docker à utiliser
+          imagePullPolicy: Always # Politique de téléchargement de l'image
+          ports:
+            - containerPort: 9094 # Port sur lequel le conteneur écoute
+          env: # Configuration des variables d'environnement
+            - name: JAVA_TOOL_OPTIONS # Options JVM pour forcer l'utilisation de TLSv1.2 pour la sécurité
+              value: "-Djdk.tls.client.protocols=TLSv1.2" # Force le conteneur à utiliser TLS version 1.2 pour toutes les connexions sortantes, améliorant ainsi la sécurité des communications.
+            - name: SPRING_DATA_MONGODB_URI # URI de la base de données MongoDB
+              valueFrom:
+                configMapKeyRef:
+                  name: configmap # Référence à une ConfigMap pour l'URI
+                  key: orderdb_url
+            - name: SPRING_DATA_MONGODB_DATABASE # Nom de la base de données MongoDB
+              value: "orderdb"
+---
+# Service pour exposer l'application orderapp au sein du cluster ou à l'extérieur
+apiVersion: v1
+kind: Service
+metadata:
+  name: order-service
+spec:
+  selector:
+    app: orderapp # Sélectionne les pods à exposer basés sur ce label
+  ports:
+    - protocol: TCP
+      port: 9094 # Port d'exposition du service
+      targetPort: 9094 # Port cible du pod à rediriger

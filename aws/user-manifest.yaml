@@ -1,0 +1,52 @@
+# Déploiement de l'application userapp pour gérer son déploiement et sa mise à l'échelle
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: userapp
+  labels:
+    app: userapp
+spec:
+  replicas: 1 # Le nombre d'instances de l'application à maintenir
+  selector:
+    matchLabels:
+      app: userapp # Utilisé pour identifier les pods à inclure dans ce déploiement
+  template: # Template pour créer les pods
+    metadata:
+      labels:
+        app: userapp
+    spec:
+      containers:
+        - name: userapp # Nom du conteneur
+          image: elfn/user-srv:latest # Image Docker à utiliser
+          imagePullPolicy: Always # Toujours tirer l'image la plus récente
+          ports:
+            - containerPort: 9093 # Port sur lequel le conteneur écoute
+          env: # Variables d'environnement pour le conteneur
+            - name: SPRING_DATASOURCE_USERNAME # Utilisateur de la base de données
+              valueFrom:
+                secretKeyRef:
+                  name: secret # Référence à un Secret pour le nom d'utilisateur
+                  key: mysql-username
+            - name: SPRING_DATASOURCE_PASSWORD # Mot de passe de la base de données
+              valueFrom:
+                secretKeyRef:
+                  name: secret # Référence à un Secret pour le mot de passe
+                  key: mysql-password
+            - name: SPRING_DATASOURCE_URL # URL de connexion à la base de données
+              valueFrom:
+                configMapKeyRef:
+                  name: configmap # Référence à une ConfigMap pour l'URL
+                  key: userdb_url
+---
+# Service pour exposer l'application userapp à l'intérieur ou à l'extérieur du cluster
+apiVersion: v1
+kind: Service
+metadata:
+  name: user-service
+spec:
+  ports:
+    - protocol: TCP
+      port: 9093 # Le port sur lequel le service est exposé
+      targetPort: 9093 # Le port cible sur le pod
+  selector:
+    app: userapp # Sélectionne les pods qui appartiennent à l'application userapp

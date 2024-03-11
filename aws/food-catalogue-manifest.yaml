@@ -1,0 +1,55 @@
+# Déploiement permettant de gérer et de mettre à l'échelle automatiquement l'application foodcatalogueapp
+apiVersion: apps/v1
+kind: Deployment # Type de ressource Kubernetes que nous créons
+metadata:
+  name: foodcatalogueapp
+  labels:
+    app: foodcatalogueapp
+spec:
+  replicas: 1 # Nombre de répliques qui seront créées pour ce déploiement
+  selector:
+    matchLabels:
+      app: foodcatalogueapp
+  template:
+    metadata:
+      labels:
+        app: foodcatalogueapp
+    spec:
+      containers:
+        - name: foodcatalogueapp
+          image: elfn/food-catalogue-srv:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 9092 # Le port sur lequel le conteneur sera accessible
+
+          env: # Variables d'environnement fournies au Pod
+            - name: SPRING_DATASOURCE_USERNAME # Nom de la variable d'environnement
+              valueFrom: # Obtenir la valeur de la variable d'environnement depuis les secrets de Kubernetes
+                secretKeyRef:
+                  name: secret
+                  key: mysql-username
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: secret
+                  key: mysql-password
+            - name: SPRING_DATASOURCE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: configmap
+                  key: foodcataloguedb_url
+
+---
+
+# Service exposant l'application foodcatalogueapp sur un réseau
+apiVersion: v1
+kind: Service
+metadata:
+  name: foodcatalogue-service
+spec:
+  ports:
+    - protocol: TCP
+      port: 9092
+      targetPort: 9092
+  selector:
+    app: foodcatalogueapp

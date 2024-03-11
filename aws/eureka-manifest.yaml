@@ -1,0 +1,45 @@
+# StatefulSet configuré pour déployer et gérer le service de découverte Eureka dans Kubernetes
+#StatefulSet est un contrôleur Kubernetes utilisé pour gérer et maintenir l'identité et le stockage persistants des pods dans des applications nécessitant une persistance de l'état.
+apiVersion: apps/v1
+kind: StatefulSet # Utilisé ici pour gérer l'application eureka, un service de découverte, qui bénéficie d'une identité persistante et d'un stockage pour chaque réplique.
+metadata:
+  name: eureka
+spec:
+  serviceName: eureka-service # Nom du service associé à ce StatefulSet
+  replicas: 1 # Nombre de répliques du service Eureka à maintenir
+  selector:
+    matchLabels:
+      app: eureka # Sélectionne les pods basés sur ce label pour le StatefulSet
+  template: # Définit le modèle de pod à utiliser
+    metadata:
+      labels:
+        app: eureka
+    spec:
+      containers:
+        - name: eureka # Nom du conteneur
+          image: elfn/eureka:latest # Image Docker du service Eureka
+          imagePullPolicy: Always # Politique de téléchargement de l'image
+          ports:
+            - containerPort: 8761 # Port sur lequel le service Eureka écoute
+          env: # Configuration des variables d'environnement pour Eureka
+            - name: EUREKA_SERVER_ADDRESS # Adresse du serveur Eureka utilisée pour la configuration
+              valueFrom:
+                configMapKeyRef:
+                  name: configmap # Référence à une ConfigMap pour obtenir l'adresse du serveur
+                  key: eureka_service_address
+
+---
+# Service pour exposer le service de découverte Eureka à d'autres composants au sein du cluster ou à l'extérieur
+apiVersion: v1
+kind: Service
+metadata:
+  name: eureka-service
+  labels:
+    app: eureka-service
+spec:
+  ports:
+    - protocol: TCP
+      port: 8761 # Port d'exposition du service
+      targetPort: 8761 # Port cible du pod Eureka à rediriger
+  selector:
+    app: eureka # Sélectionne les pods à exposer basés sur ce label
