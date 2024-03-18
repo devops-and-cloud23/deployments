@@ -13,6 +13,7 @@ kubectl delete deploy foodcatalogueapp
 kubectl delete deploy orderapp
 kubectl delete deploy restaurantapp
 kubectl delete deploy userapp
+kubectl delete deploy angularapp
 
 # Afficher les services existants
 echo "Services actuels :"
@@ -24,6 +25,7 @@ kubectl delete svc foodcatalogue-service
 kubectl delete svc order-service
 kubectl delete svc restaurant-service
 kubectl delete svc user-service
+kubectl delete svc angular-service
 
 # Appliquer les nouvelles configurations
 echo "Application des nouvelles configurations..."

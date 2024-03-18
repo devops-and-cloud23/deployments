@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: orderapp # Nom du conteneur
-          image: elfn/order-srv:latest # Image Docker à utiliser
+          image: elfn/order-srv:latest.2 # Image Docker à utiliser
           imagePullPolicy: Always # Politique de téléchargement de l'image
           ports:
             - containerPort: 9094 # Port sur lequel le conteneur écoute

@@ -1,32 +1,24 @@
-# Ceci est une configuration Ingress pour Kubernetes qui définit comment le trafic externe est acheminé vers les services internes du cluster.
-apiVersion: networking.k8s.io/v1 # Cette version de l'API est utilisée pour une configuration stable de l'Ingress
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: aws-ingress
-  # Pour spécifier un espace de noms, décommentez la ligne suivante :
-  # namespace: argocd
+  #namespace: argocd
   annotations:
-    # Utilisation d'un Application Load Balancer d'AWS
-    ikubernetes.io/ingress.class: alb
-    # Configuration pour un ALB accessible depuis Internet
+    kubernetes.io/ingress.class: alb
     alb.ingress.kubernetes.io/scheme: internet-facing
-    # Cible les pods directement par leur IP
     alb.ingress.kubernetes.io/target-type: ip
 spec:
   rules:
-    # Règle par défaut pour la racine URL
     - http:
         paths:
           - path: /
             pathType: Prefix
             backend:
               service:
-                # Nom du service pour la racine URL
                 name: angular-service
                 port:
-                  # Port du service pour la racine URL
                   number: 80
-          # Règle pour le chemin /restaurant
+
           - path: /restaurant
             pathType: Prefix
             backend:
@@ -34,7 +26,7 @@ spec:
                 name: restaurant-service
                 port:
                   number: 9091
-          # Règle pour le chemin /foodCatalogue
+
           - path: /foodCatalogue
             pathType: Prefix
             backend:
@@ -42,7 +34,7 @@ spec:
                 name: foodcatalogue-service
                 port:
                   number: 9092
-          # Règle pour le chemin /order
+
           - path: /order
             pathType: Prefix
             backend:
@@ -50,7 +42,8 @@ spec:
                 name: order-service
                 port:
                   number: 9094
-          # Règle pour le chemin /user
+
+
           - path: /user
             pathType: Prefix
             backend:
@@ -58,3 +51,6 @@ spec:
                 name: user-service
                 port:
                   number: 9093
+
+
+         
