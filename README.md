@@ -1,5 +1,6 @@
 # CICD training
-![Untitled](https://prod-files-secure.s3.us-west-2.amazonaws.com/346e1e05-3f83-4cee-b2d5-f01b6194e7e2/51329f7a-c3bf-412a-b0c9-79055bbdf6e3/Untitled.png)
+
+![Untitled (1)](https://github.com/devopscourse24/deployments/assets/29838473/45f54e6a-5d18-4598-858e-30d98fda44bc)
 
 L'image décrit un pipeline de CI/CD utilisant Jenkins, Docker, GitHub, Argo et Kubernetes sur AWS EKS. Voici l'explication des étapes :
 
