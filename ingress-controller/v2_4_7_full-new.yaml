@@ -559,7 +559,15 @@ spec:
     subresources:
       status: {}
 ---
-
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    app.kubernetes.io/component: controller
+    app.kubernetes.io/name: aws-load-balancer-controller
+  name: aws-load-balancer-controller
+  namespace: kube-system
+---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
@@ -804,9 +812,9 @@ spec:
       - args:
         - --cluster-name=aws-eks-cluster
         - --ingress-class=alb
-        - --aws-vpc-id=vpc-0ecac7c7538898497
-        - --aws-region=eu-west-2
-        image: codedecode25/aws-load-balancer:v2.4.7
+        - --aws-vpc-id=vpc-0ba62d7c30532709c
+        - --aws-region=us-east-2
+        image: public.ecr.aws/eks/aws-load-balancer-controller:v2.4.7
         livenessProbe:
           failureThreshold: 2
           httpGet:

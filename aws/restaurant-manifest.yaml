@@ -17,10 +17,11 @@ spec:
     spec:
       containers:
         - name: restaurantapp # Nom du conteneur
-          image: elfn/restaurant-srv:latest # Image Docker à utiliser pour le conteneur
+          image: elfn/restaurant-srv:latest.10 # Image Docker à utiliser pour le conteneur
           imagePullPolicy: Always # Politique de téléchargement de l'image
           ports:
             - containerPort: 9091 # Port sur lequel le conteneur écoute
+              hostPort: 9091
           env: # Variables d'environnement pour le conteneur
             - name: SPRING_DATASOURCE_USERNAME # Nom d'utilisateur de la base de données
               valueFrom:

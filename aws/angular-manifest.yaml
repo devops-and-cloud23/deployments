@@ -14,10 +14,11 @@ spec:
     spec:
       containers:
         - name: angular-app-container
-          image: elfn/food-delivery-app:latest.4
+          image: elfn/food-delivery-app:latest.18
           imagePullPolicy: Always
           ports:
             - containerPort: 80
+              hostPort: 80
 
 ---
 

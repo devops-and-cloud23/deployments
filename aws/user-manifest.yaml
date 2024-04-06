@@ -17,10 +17,11 @@ spec:
     spec:
       containers:
         - name: userapp # Nom du conteneur
-          image: elfn/user-srv:latest # Image Docker à utiliser
+          image: elfn/user-srv:latest.10 # Image Docker à utiliser
           imagePullPolicy: Always # Toujours tirer l'image la plus récente
           ports:
             - containerPort: 9093 # Port sur lequel le conteneur écoute
+              hostPort: 9093
           env: # Variables d'environnement pour le conteneur
             - name: SPRING_DATASOURCE_USERNAME # Utilisateur de la base de données
               valueFrom:

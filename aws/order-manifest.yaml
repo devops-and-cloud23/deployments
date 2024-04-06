@@ -19,6 +19,7 @@ spec:
           imagePullPolicy: Always # Politique de téléchargement de l'image
           ports:
             - containerPort: 9094 # Port sur lequel le conteneur écoute
+              hostPort: 9094
           env: # Configuration des variables d'environnement
             - name: JAVA_TOOL_OPTIONS # Options JVM pour forcer l'utilisation de TLSv1.2 pour la sécurité
               value: "-Djdk.tls.client.protocols=TLSv1.2" # Force le conteneur à utiliser TLS version 1.2 pour toutes les connexions sortantes, améliorant ainsi la sécurité des communications.

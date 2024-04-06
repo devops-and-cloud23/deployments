@@ -5,12 +5,13 @@
   # Identifier unique pour l'instantané RDS
     SNAPSHOT_IDENTIFIER="mysql-db-snapshot-$(date +%F-%H-%M-%S)"
   
-    GLOBAL_LB_NAME=$(kubectl get ingress aws-ingress -o jsonpath='{.status.loadBalancer.ingress[*].hostname}')
+   
   # Nom de la stack CloudFormation
     STACK_NAME="eksctl-aws-eks-cluster-cluster"
     REGION="us-east-2" # La région de votre cluster EKS
     CLUSTER_NAME="aws-eks-cluster" # Le nom de votre cluster EKS
     BACKUP_FILE="eks/backup-$(date +%Y%m%d%H%M%S).yaml" # Définissez le fichier de sauvegarde avec un timestamp
+   GLOBAL_LB_NAME=$(kubectl get ingress aws-ingress -o jsonpath='{.status.loadBalancer.ingress[*].hostname}')
 
 
 #1- EKS Creation commands
@@ -43,11 +44,11 @@ ekscrt(){
     # Mettre à jour le fichier kubeconfig avec le nouveau cluster EKS
     # Pour la connection et l'interaction avec le cluster
     echo "Mise à jour du kubeconfig..."
-    aws eks --region us-east-2 update-kubeconfig --name aws-eks-cluster
+    aws eks --region $REGION update-kubeconfig --name aws-eks-cluster
 
     # Créer un nouveau groupe de nœuds
     echo "Création d'un groupe de nœuds..."
-    eksctl create nodegroup --cluster aws-eks-cluster --region us-east-2 --name node-grp
+    eksctl create nodegroup --cluster $CLUSTER_NAME --region $REGION --name node-grp
 
     # Deploiement des services dans le cluster
     echo "Deploiement des différents services..."
@@ -63,7 +64,6 @@ ekscrt(){
 
 #2- Commandes de suppression EKS
 eksdlt() {
-  REGION="us-east-2" # Assurez-vous que ceci correspond à votre région AWS
   CLUSTER_NAME="aws-eks-cluster" # Mettez à jour cela avec le nom de votre cluster EKS
   BACKUP_FILE="backup-$(date +%Y%m%d%H%M%S).yaml" # Nom de fichier pour la sauvegarde
 
@@ -208,23 +208,23 @@ lbCrt() {
     
 # Crée une politique IAM qui définit les permissions nécessaires pour le contrôleur d'équilibrage de charge AWS afin de gérer les ressources ALB pour le cluster EKS.
 echo "Création de la politique IAM pour le contrôleur de load balancer..."
-aws iam create-policy --policy-name AWSLoadBalancerControllerIAMPolicy --policy-document file://documents/iam_policy.json --region us-east-2
+aws iam create-policy --policy-name AWSLoadBalancerControllerIAMPolicy --policy-document file://documents/iam_policy.json --region $REGION
 
 # Associe le fournisseur d'identité OIDC d'IAM avec le cluster EKS, permettant l'authentification basée sur les rôles IAM pour les services dans le cluster.
 echo "Association du fournisseur OIDC IAM avec le cluster EKS..."
-eksctl utils associate-iam-oidc-provider --region=us-east-2 --cluster=aws-eks-cluster --approve
+eksctl utils associate-iam-oidc-provider --region=$REGION --cluster=$CLUSTER_NAME --approve
 
 # Crée un compte de service IAM spécifique pour le contrôleur d'équilibrage de charge dans Kubernetes, et lui attribue la politique IAM créée précédemment, permettant au contrôleur d'interagir avec les ressources ALB.
 echo "Création du compte de service IAM pour le contrôleur de load balancer..."
-eksctl create iamserviceaccount --cluster=aws-eks-cluster --namespace=kube-system --region us-east-2 --name=aws-load-balancer-controller --role-name AmazonEKSLoadBalancerControllerRole --attach-policy-arn=arn:aws:iam::767398100244:policy/AWSLoadBalancerControllerIAMPolicy --override-existing-serviceaccounts --approve
+eksctl create iamserviceaccount --cluster=$CLUSTER_NAME --namespace=kube-system --region $REGION --name=aws-load-balancer-controller --role-name AmazonEKSLoadBalancerControllerRole --attach-policy-arn=arn:aws:iam::654654413024:policy/AWSLoadBalancerControllerIAMPolicy --override-existing-serviceaccounts --approve
 
 # Déploie Cert-Manager dans le cluster Kubernetes, un outil nécessaire pour la gestion des certificats TLS utilisés par les ingress, y compris ceux gérés par le contrôleur d'équilibrage de charge AWS.
 echo "Déploiement de Cert-Manager..."
-kubectl apply --validate=false -f https://github.com/jetstack/cert-manager/releases/download/v1.5.4/cert-manager.yaml
+kubectl apply --validate=false -f https://github.com/jetstack/cert-manager/releases/download/v1.13.3/cert-manager.yaml
 
 
   echo "Application de la configuration du contrôleur de load balancer..."
-  kubectl apply -f ingress-controller/v2_4_7_full.yaml
+  kubectl apply -f documents/v2_5_4_full.yaml
 
   echo "Configuration du contrôleur de load balancer terminée."
 
@@ -232,13 +232,17 @@ kubectl apply --validate=false -f https://github.com/jetstack/cert-manager/relea
   echo "Attente de la création de l'équilibreur de charge..."
   sleep 60 # Attendre 60 secondes pour laisser le temps à l'équilibreur de charge de se déployer
 
-  # Afficher le nom de l'équilibreur de charge
+# echo "Création de la classe d'Ingress..."
+  kubectl apply -f ingress-class.yaml
+
+# echo "Création des règles d'Ingress..."
+  kubectl apply -f ingress.yaml
+
+  GLOBAL_LB_NAME=$(kubectl get ingress aws-ingress -o jsonpath='{.status.loadBalancer.ingress[*].hostname}')
+
+   # Afficher le nom de l'équilibreur de charge
   # Remplacer `<votre-ingress>` par le nom réel de votre ressource Ingress
   echo "Nom de l'équilibreur de charge créé : $GLOBAL_LB_NAME"
-
-
-#   echo "Création des règles d'Ingress..."
-  kubectl apply -f ingress.yaml
 
   # Stocker LB_NAME dans une variable globale
   # GLOBAL_LB_NAME=$LB_NAME
@@ -264,7 +268,7 @@ rdsSnpDlt() {
 
 #9- Load balancer suppression
 lbDlt() {
-    REGION=us-east-2
+   
     LB_ARN=$(aws elbv2 describe-load-balancers --region $REGION --query "LoadBalancers[?DNSName=='$GLOBAL_LB_NAME'].LoadBalancerArn" --output text)
 
   if [ -n "$GLOBAL_LB_NAME" ]; then

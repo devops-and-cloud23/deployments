@@ -17,10 +17,11 @@ spec:
     spec:
       containers:
         - name: foodcatalogueapp
-          image: elfn/food-catalogue-srv:latest
+          image: elfn/food-catalogue-srv:latest.10
           imagePullPolicy: Always
           ports:
             - containerPort: 9092 # Le port sur lequel le conteneur sera accessible
+              hostPort: 9092
 
           env: # Variables d'environnement fournies au Pod
             - name: SPRING_DATASOURCE_USERNAME # Nom de la variable d'environnement
